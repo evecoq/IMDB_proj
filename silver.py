@@ -132,6 +132,8 @@ titles_df.show(truncate=False)
 titles_df = titles_df.drop("genres")
 titles_df.show(5)
 
+# Export titles_df.csv into HDFS /silver/
+titles_df.write.csv("hdfs://your_hdfs_cluster/path/to/imdbdata/silver", header=True, mode="overwrite")
 
-# Export titles_df into HDFS /silver/
 # Export ratings_df into HDFS /silver/
+ratings_df.write.csv("hdfs://your_hdfs_cluster/path/to/imdbdata/silver", header=True, mode="overwrite")
