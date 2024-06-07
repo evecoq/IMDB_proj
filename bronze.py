@@ -8,7 +8,7 @@ from pyspark.sql.functions import countDistinct
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# ----------------------------BRONZE LEVEL------------------------------------
+# ----------------------------SILVER LEVEL------------------------------------
 
 # Create a Spark session, connect to HDFS cluster
 spark = SparkSession.builder.master("local[*]").getOrCreate()
@@ -113,5 +113,5 @@ titles_df = titles_df.drop("genres")
 titles_df
 
 
-# Export titles_df into HDFS /bronze/
-# Export ratings_df into HDFS /bronze/
+# Export titles_df into HDFS /silver/
+# Export ratings_df into HDFS /silver/
