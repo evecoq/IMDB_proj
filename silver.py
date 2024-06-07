@@ -10,9 +10,28 @@ import seaborn as sns
 
 # ----------------------------SILVER LEVEL------------------------------------
 
+# Create a SparkSession
+spark = SparkSession.builder \
+    .appName("Bronze_to_Silver") \
+    .getOrCreate()
+
+# HDFS path to your file
+hdfs_path_t = "hdfs://namenode_host:port/path/to/imdbdata/bronze/title_basic.tsv"
+hdfs_path_r = "hdfs://namenode_host:port/path/to/imdbdata/bronze/title_ratings.tsv"
+
+# Read the TSV into a DataFrame
+titles_df = spark.read.csv(hdfs_path_t, sep='\t', header=True, inferSchema=True)
+ratings_df = spark.read.csv(hdfs_path_r, sep='\t', header=True, inferSchema=True)
+
+# Show the exported data
+titles_df.show(5)
+ratings_df.show(5)
+
+""" ---La connexion pour Google Colab---
 # Create a Spark session, connect to HDFS cluster
 spark = SparkSession.builder.master("local[*]").getOrCreate()
 spark.conf.set("spark.sql.repl.eagerEval.enabled", True)
+
 
 # Load Titles dataset from HDFS
 titles_df = spark.read.format("csv") \
@@ -29,6 +48,7 @@ ratings_df = spark.read.format("csv") \
     .option("delimiter", "\t") \
     .load("title_ratings.tsv")
 ratings_df
+"""
 
 # Print the schema of the both df
 titles_df.printSchema()
@@ -72,7 +92,7 @@ for column in columns_to_process:
 columns_to_process = ["tconst", "titleType", "primaryTitle", "originalTitle", "genres"]
 for column in columns_to_process:
     titles_df = titles_df.withColumn(column, when(titles_df[column] == "\\N", None).otherwise(titles_df[column].cast("string")))
-titles_df
+titles_df.show(5)
 
 # Re-chech the amount of null values in df after the transformation
 null_counts = []
@@ -110,7 +130,7 @@ for i in range(max_values):
 titles_df = titles_df.drop("genres_array")
 titles_df.show(truncate=False)
 titles_df = titles_df.drop("genres")
-titles_df
+titles_df.show(5)
 
 
 # Export titles_df into HDFS /silver/
