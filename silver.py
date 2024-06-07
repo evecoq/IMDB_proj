@@ -1,7 +1,7 @@
-#--------------------------------SILVER LEVEL-----------------------------
+#--------------------------------GOLD LEVEL-----------------------------
 
-# Load Titles dataset from HDFS /bronze/
-# Load Ratings dataset from HDFS /bronze/
+# Load Titles dataset from HDFS /silver/
+# Load Ratings dataset from HDFS /silver/
 
 
 # Merge both tables (we want to keep all the rows from ratings_df table because it's has rating by each episode of a TV-show and not only by title)
@@ -46,4 +46,4 @@ plt.title('Correlation Heatmap')
 plt.show()
 
 
-# Export df into HDFS /silver/
+# Export df into HDFS /gold/
