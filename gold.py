@@ -15,7 +15,7 @@ ratings_df = spark.read.csv(csv_r, header=True, inferSchema=True)
 ratings_df.show(5)
 
 # Merge both tables (we want to keep all the rows from ratings_df table because it's has rating by each episode of a TV-show and not only by title)
-df = titles_df.join(ratings_df, on="tconst", how="right")
+df = titles_df.join(ratings_df, on="tconst", how="inner")
 df
 
 #Check number of rows after the merge
