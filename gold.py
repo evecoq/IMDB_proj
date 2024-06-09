@@ -1,3 +1,13 @@
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import split, col
+from pyspark.sql.functions import split, size, col
+from pyspark.sql.functions import col, sum
+from pyspark.sql.functions import when
+from pyspark.sql.functions import countDistinct
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
+
 
 # Create Spark session
 spark = SparkSession.builder \
@@ -74,7 +84,7 @@ plt.show()
 
 # Save the plot locally
 local_plot2 = "/tmp/Type count barplot.png"
-plt.savefig(local_plot2)
+plt.savefig(local_plot3)
 plt.close()
 
 
@@ -88,7 +98,22 @@ plt.show()
 
 # Save the plot locally
 local_plot3 = "/tmp/Correlation Heatmap.png"
-plt.savefig(local_plot3)
+plt.savefig(local_plot4)
+plt.close()
+
+
+# endYear and startYear values destribution
+pandas_df = titles_df.select("startYear", "endYear").toPandas()
+plt.figure(figsize=(12, 6))
+sns.boxplot(data=pandas_df, orient='h')
+plt.title('Boxplot of Start Year')
+plt.xlabel('Year')
+plt.ylabel('Start Year')
+plt.show()
+
+# Save the plot locally
+local_plot2 = "/tmp/Year boxplot.png"
+plt.savefig(local_plot5)
 plt.close()
 
 
