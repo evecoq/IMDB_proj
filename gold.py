@@ -14,13 +14,13 @@ csv_r = "hdfs://namenode/user/output/imdbdata/silver/ratings_df.csv"
 ratings_df = spark.read.csv(csv_r, header=True, inferSchema=True)
 ratings_df.show(5)
 
-# Merge both tables (we want to keep all the rows from ratings_df table because it's has rating by each episode of a TV-show and not only by title)
+# Merge both tables (we want to keep all the rows from titles_df table)
 df = titles_df.join(ratings_df, on="tconst", how="inner")
 df
 
 #Check number of rows after the merge
 print(df.count())
-print(ratings_df.count())
+print(titles_df.count())
 
 
 # Some visual data exploraition with plots
