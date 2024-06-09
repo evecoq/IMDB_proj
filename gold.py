@@ -59,6 +59,25 @@ plt.savefig(local_plot2)
 plt.close()
 
 
+# Type count barplot
+type_counts = titles_df.groupBy('titleType').count()
+type_counts = type_counts.orderBy('count', ascending=False)
+type_counts_list = type_counts.collect()
+genres = [row['titleType'] for row in type_counts_list]
+counts = [row['count'] for row in type_counts_list]
+plt.figure(figsize=(10, 6))
+sns.barplot(x=counts, y=genres, palette='viridis')
+plt.title('Number of Titles by Type')
+plt.xlabel('Number of Titles')
+plt.ylabel('Genre')
+plt.show()
+
+# Save the plot locally
+local_plot2 = "/tmp/Type count barplot.png"
+plt.savefig(local_plot2)
+plt.close()
+
+
 # Correlation Heatmap
 pandas_df = df.select('averageRating', 'numVotes', 'startYear', 'endYear', 'runtimeMinutes', 'isAdult').toPandas()
 plt.figure(figsize=(10, 8))
