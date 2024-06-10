@@ -1,0 +1,108 @@
+def create_spark_session(app_name):
+    return SparkSession.builder.appName(app_name).getOrCreate()
+
+def tsv_to_df(spark, hdfs_path, delimiter='\t'):
+    return spark.read.csv(hdfs_path, sep=delimiter, header=True, inferSchema=True)
+
+def df_info(df, name):
+    print(f"\nSchema of {name} DataFrame:")
+    df.printSchema()
+    print(f"\nDescription of {name} DataFrame:")
+    df.describe().show()
+
+def count_distinct(df, column):
+    distinct_count = df.select(countDistinct(column)).collect()[0][0]
+    total_count = df.count()
+    return distinct_count, total_count
+
+def check_null(df):
+    null_counts = [sum(col(column).isNull().cast("int")).alias(column) for column in df.columns]
+    return df.select(null_counts)
+
+def replace_nulls_and_cast(df, columns_to_process, cast_type):
+    for column in columns_to_process:
+        df = df.withColumn(column, when(df[column] == "\\N", None).otherwise(df[column].cast(cast_type)))
+    return df
+
+def check_and_remove_duplicates(df):
+    count_before = df.count()
+    df = df.dropDuplicates()
+    count_after = df.count()
+    if count_before == count_after:
+        print("No duplicates found.")
+    else:
+        print("Duplicates found and removed.")
+    return df
+
+def split_column(df):
+    df = df.withColumn("genres_array", split(col("genres"), ","))
+    max_values = df.select(size(col("genres_array")).alias("num_values")).agg({"num_values": "max"}).collect()[0][0]
+    print(f"Maximal number of values in a row: {max_values}")
+    for i in range(max_values):
+        df = df.withColumn(f"genre_{i+1}", col("genres_array").getItem(i))
+    df = df.drop("genres_array").drop("genres")
+    return df
+
+def export_df_to_hdfs(df, hdfs_path):
+    df.write.csv(hdfs_path, header=True, mode="overwrite")
+
+# Create Spark Session
+spark = create_spark_session("Bronze_to_Silver")
+
+# HDFS paths to your files
+hdfs_path_t = "hdfs://namenode_host:port/path/to/imdbdata/bronze/title_basic.tsv"
+hdfs_path_r = "hdfs://namenode_host:port/path/to/imdbdata/bronze/title_ratings.tsv"
+
+# Read the TSV files into DataFrames
+titles_df = tsv_to_df(spark, hdfs_path_t)
+ratings_df = tsv_to_df(spark, hdfs_path_r)
+
+# Show the exported data
+titles_df.show(5)
+ratings_df.show(5)
+
+# Show DataFrame info
+df_info(titles_df, "Titles")
+df_info(ratings_df, "Ratings")
+
+# Count distinct values in IDs
+dist_tconst_r, total_r = count_distinct(ratings_df, "tconst")
+print(f"Exact distinct count in Ratings: {dist_tconst_r}")
+print(f"Total count in Ratings: {total_r}")
+
+dist_tconst_t, total_t = count_distinct(titles_df, "tconst")
+print(f"Exact distinct count in Titles: {dist_tconst_t}")
+print(f"Total count in Titles: {total_t}")
+
+# Check number of NULL values
+null_counts_titles = check_null(titles_df)
+null_counts_titles.show()
+
+null_counts_ratings = check_null(ratings_df)
+null_counts_ratings.show()
+
+# Replace "\\N" values by NULL and transform columns into appropriate types
+titles_df = replace_nulls_and_cast(titles_df, ["startYear", "endYear", "runtimeMinutes"], "int")
+titles_df = replace_nulls_and_cast(titles_df, ["tconst", "titleType", "primaryTitle", "originalTitle", "genres"], "string")
+
+# Show updated DataFrame
+titles_df.show(5)
+
+# Re-check the number of null values in the DataFrame after the transformation
+null_counts_titles = check_null_values(titles_df)
+null_counts_titles.show()
+
+# Check for and remove duplicates
+titles_df = check_and_remove_duplicates(titles_df)
+titles_df.show()
+
+ratings_df = check_and_remove_duplicates(ratings_df)
+ratings_df.show()
+
+# Split Genre column into multiple columns
+titles_df = split_genres_column(titles_df)
+titles_df.show(5)
+
+# Export DataFrames to HDFS /silver/
+export_df_to_hdfs(titles_df, "hdfs://your_hdfs_cluster/path/to/imdbdata/silver/titles")
+export_df_to_hdfs(ratings_df, "hdfs://your_hdfs_cluster/path/to/imdbdata/silver/ratings")
